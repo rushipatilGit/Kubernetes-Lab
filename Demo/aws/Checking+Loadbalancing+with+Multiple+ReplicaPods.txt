@@ -8,3 +8,27 @@ while ($true) {
 
 MAC & LINUX
 while true; do curl "<link>"; echo; sleep 1; done
+
+-------------------------------------------------------------------------
+
+When you specify image: embarkx/hello-spring without a registry URL or version tag, Kubernetes expands it to docker.io/embarkx/hello-spring:latest and instructs the worker node's container runtime (such as containerd or CRI-O) to locate and pull it.
+
+Step-by-Step Image Resolution Process
+
+• Default Registry Expansion. Because there is no domain name at the start of the image string (like ghcr.io/ or gcr.io/), the container runtime defaults to Docker Hub (docker.io).
+• Default Tag Assignment. Because no colon and tag were written after hello-spring, Kubernetes automatically appends :latest to the end of the image name.
+• Local Node Cache Check. Before downloading anything over the internet, the kubelet checks the worker node's local cache via the Container Runtime Interface (CRI). Since the :latest tag is used, Kubernetes defaults to imagePullPolicy: Always, meaning it will contact the registry to verify if a newer version exists even if a cached copy is present.
+• Remote Registry Lookup. The container runtime connects to registry-1.docker.io over HTTPS, looks up the embarkx/hello-spring repository, resolves the latest tag to a unique SHA-256 digest, and downloads any missing image layers.
+
+Specifying Custom Registries or Tags
+
+You can override how Kubernetes searches for an image by changing the format of the image: field according to the Kubernetes Images documentation:
+
+Image String Format	Where Kubernetes Searches
+embarkx/hello-spring	Docker Hub (docker.io), looking for the latest tag.
+embarkx/hello-spring:v1.0.0	Docker Hub (docker.io), looking for the specific v1.0.0 tag.
+ghcr.io/embarkx/hello-spring:latest	GitHub Container Registry (ghcr.io), bypassing Docker Hub.
+
+Are you running into an ImagePullBackOff error on your cluster, or would you like to know how to configure imagePullSecrets for private repositories?
+Try without personalization
++3
